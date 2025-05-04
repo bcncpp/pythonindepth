@@ -25,4 +25,7 @@ class CallCount:
             self._counts[argument] = 0
 
 if __name__ == "__main__":
-    
+    call_counter = CallCount()
+    print(call_counter("apple"))  # 1
+    print(call_counter("banana")) # 1
+    print(call_counter("apple"))  # 2
