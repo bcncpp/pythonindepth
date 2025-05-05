@@ -189,6 +189,7 @@ class Caller:
 # Usage
 caller = Caller()
 caller.f1()
+```
 
 ## Why is this better?
 
