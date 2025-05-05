@@ -163,9 +163,9 @@ Solution: Using a Data Object
 
 ```python
 
-class Params:
+class Context:
     """Represents the parameters needed by f2."""
-    def __init__(self, param1, param2, param3, param4, param5):
+    def __init__(self, param1: int, param2: int, param3: int, param4: int, param5:int)->None:
         self.param1 = param1
         self.param2 = param2
         self.param3 = param3
@@ -174,21 +174,22 @@ class Params:
 
 class Processor:
     """A class responsible for processing the parameters."""
-    @staticmethod
-    def f2(params: Params):
+    def f1(params: Params)->int:
         result = params.param1 + params.param2 - params.param3 * params.param4 / params.param5
         return result
 
 class Caller:
     """Caller function that uses Processor to handle parameters."""
     def f1(self):
-        params = Params(10, 20, 30, 40, 50)
-        result = Processor.f2(params)
+        params = Context(10, 20, 30, 40, 50)
+        processor = Processor()
+        result = processor.f2(params)
         print(result)
 
 # Usage
 caller = Caller()
 caller.f1()
+```
 
 ## Why is this better?
 
@@ -201,9 +202,7 @@ caller.f1()
 When you have a function with many parameters, it usually signals tight coupling with its caller. By grouping related parameters into a class or data structure, you reduce the complexity of the function signature and make it easier to maintain.
 
 2. Leaky Abstractions
-
 Functions that depend on a large number of parameters are often leaky abstractions. The caller often ends up understanding the internal workings of the function, which reduces modularity.
-
 3. Reusability and Flexibility
 With fewer arguments and a clear abstraction, you improve the reusability of the function. If the function signature is small and simple, 
 it's easier to plug the function into other contexts without major changes.
