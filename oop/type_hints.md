@@ -154,17 +154,17 @@ We’ll cover each of these in turn, starting with a type that is strange, appar
 
 ## Typing Any.
 
-```
+```python
 def mul2(x):
     return x * 2
 ```
 Is equivalent to :
-```
-def mul2(x: Any)->Any:
+```python
+def mul2(x: any)->any:
     return x * 2
 ```
 
-```
+```python
 #!/usr/bin/env python3
 def is_divisible(x: object, y: object) -> object:
     for k in range(0, x):
@@ -178,25 +178,22 @@ if __name__=="__main__":
     print(is_divisible(99,3)) 
 ```
 
-```
-jozoppi@DESKTOP-T9826C8:~/python/mypy$ mypy --disallow-incomplete-defs divisible.py
+```bash
+$ mypy --disallow-incomplete-defs divisible.py
 divisible.py:3: error: No overload variant of "range" matches argument types "int", "object"
 divisible.py:3: note: Possible overload variants:
 divisible.py:3: note:    def __init__(self, SupportsIndex) -> range
 divisible.py:3: note:    def __init__(self, SupportsIndex, SupportsIndex, SupportsIndex = ...) -> range
 Found 1 error in 1 file (checked 1 source file)
-jozoppi@DESKTOP-T9826C8:~/python/mypy$
 ```
 
 
-Classes and OOP.
+## Classes and OOP.
 
+We call Liskov Substitution Principle is used to  defined is-sub-type-of  in terms of supported operations: if an object of type T2 substitutes an object of type T1 and 
+the program still behaves correctly, then T2 is subtype-of T1.
 
-
-
-We call Liskov Substitution Principle is used to  defined is-sub-type-of  in terms of supported operations: if an object of type T2 substitutes an object of type T1 and the program still behaves correctly, then T2 is subtype-of T1.
-
-```
+```python
 class Base:
     def __init__(self, value : str)->None:
         self._value = value
@@ -215,9 +212,8 @@ if __name__=="__main__":
 
 ```
 
-Consistent-With.
+### Consistent-With.
 In a gradual type system, there is another relationship: consistent-with, which applies wherever subtype-of applies, with special provisions for type Any.
-
 In a gradual type system The rules for consistent-with are:
 
 1. Given T1 and a subtype T2, then T2 is consistent-with T1 (Liskov substitution).
@@ -225,10 +221,7 @@ In a gradual type system The rules for consistent-with are:
 3. Any is consistent-with every type: you can always pass an object of type Any where an argument of another type is expected.
 
 
-Simple types.
-
-
-
+### Simple types.
 
 Simple types like int, float, str, bytes may be used directly in type hints.
 Here is the case we've rules 'consistent-with':
@@ -236,25 +229,23 @@ Here is the case we've rules 'consistent-with':
 - float is consistent-with complex, so also int it's.
 
 Optional and Union hints
-```
-
-#!/usr/bin/env python3
+```python
 from typing import Any
 from typing import Optional
 def show_results(count: int, singular: str, plural: Optional[str] = None) -> Optional[str]:
     pass
 ```
 
-```
+```python
 from typing import Union
-def parse_token(token: str) -> Union[str, float]:
+def parse_token(token: str) -> str | float:
     try:
         return float(token)
     except ValueError:
         return token
 ```
 
-Type hints in typing
+### Type hints in typing
 
 ```
 list        collections.deque        abc.Sequence  abc.MutableSequence
@@ -282,24 +273,23 @@ collections.abc.MutableSet
 typing.MutableSet
 
 Tuple:
-```
+```python
 tuple[int,float]  -
 # named tuple
 from typing import NamedTuple
 stuff: tuple[Any, ...]
 stuff: tuple[int,...]
-
 ```
 
 Generic mapping types are annotated as MappingType[KeyType, ValueType]. T
 
-```
+```python
 from typing import Dict
 typing.Dict < Python 3.9
 dict >=Python 3.9
 ```
 
-```
+```python
 Iterable
 from collections.abc import Iterable
 FromTo = tuple[str, str]  1
