@@ -124,3 +124,161 @@ class LoginEvent:
 event = LoginEvent(username="john_doe", password="secret", ip="192.168.0.1")
 print(event.serialize())
 ```
+
+## Key Concepts: Decorators and Function Nesting
+
+### Basic Decorator Structure:
+ A decorator is essentially a higher-order function that takes a function as input, does something with it (like modifying its behavior), and then returns the modified function.
+ The decorator is applied to a function using the @ syntax, which is shorthand for passing the function to the decorator.
+ When you want to pass parameters to a decorator, you need another level of indirection. The first function in the chain accepts the parameters and returns a decorator function. The decorator then wraps the original function, applying the changes, and finally, the wrapped function is returned.
+
+### Multiple Levels of Nesting:
+  - Level 1: A function that takes parameters (e.g., the number of retries).
+  - Level 2: The decorator function itself that wraps the original function.
+  - Level 3: The wrapped function (the one that gets modified).
+
+```python
+import time
+import functools
+# Level 1: Function that accepts parameters (number of retries)
+def retry(retries=3, delay=1):
+    # Level 2: The actual decorator function
+    def decorator(func):
+        # Level 3: The wrapped function with retry logic
+        @functools.wraps(func)  # Keeps original function's signature and metadata
+        def wrapper(*args, **kwargs):
+            attempts = 0
+            while attempts < retries:
+                try:
+                    return func(*args, **kwargs)  # Try to run the original function
+                except Exception as e:
+                    attempts += 1
+                    print(f"Attempt {attempts} failed: {e}")
+                    if attempts < retries:
+                        print(f"Retrying in {delay} seconds...")
+                        time.sleep(delay)  # Wait before retrying
+                    else:
+                        print("Max retries reached. Giving up.")
+                        raise e  # After retries are exhausted, raise the exception
+        return wrapper
+    return decorator
+
+# Example function that could fail
+@retry(retries=5, delay=2)
+def some_function():
+    print("Trying to do something risky...")
+    # Simulating a failure
+    raise ValueError("Something went wrong!")
+
+# Calling the function
+try:
+    some_function()
+except Exception as e:
+    print(f"Function failed with error: {e}")
+
+```
+This might lead to much nesting. There's a different way of implementing decorators, which instead of using nested functions uses objects. We'll explore that now. An alternative way might be to have a class to define a decorator and put the decorator magic in **__call**, 
+so we've a callable object.
+```python
+from functools import wraps
+from typing import Optional, Sequence
+
+from log import logger
+
+_DEFAULT_RETRIES_LIMIT = 3
+
+class ControlledException(Exception):
+    """A generic exception on the program's domain."""
+
+class WithRetry:
+    def __init__(
+        self,
+        retries_limit: int = _DEFAULT_RETRIES_LIMIT,
+        allowed_exceptions: Optional[Sequence[Exception]] = None,
+    ) -> None:
+        self.retries_limit = retries_limit
+        self.allowed_exceptions = allowed_exceptions or (ControlledException,)
+
+    def __call__(self, operation):
+        @wraps(operation)
+        def wrapped(*args, **kwargs):
+            last_raised = None
+            for _ in range(self.retries_limit):
+                try:
+                    return operation(*args, **kwargs)
+                except self.allowed_exceptions as e:
+                    logger.warning(
+                        "retrying %s due to %s", operation.__qualname__, e
+                    )
+                    last_raised = e
+            raise last_raised
+
+        return wrapped
+```
+The decorator is pretty much obvious:
+```python
+@WithRetry(retries_limit=5)
+def run_with_custom_retries_limit(task):
+    return task.run()
+```
+
+Now we want to add decorators with default values.
+### Key Concepts
+- Decorator with Parameters: You want the decorator to accept parameters (like x and y), but at the same time, you want to ensure it works without parameters as well (default values should be used).
+    1. functools.wraps: Ensures that the decorated function retains its original name, docstring, and other attributes.
+    2. functools.partial: It's not strictly needed here because you're already handling parameters in the decorator directly, but it can be useful for pre-filling arguments in other cases.
+
+### Corrected and Optimized Code
+Let me explain your code with some improvements:
+```python
+from functools import wraps
+
+DEFAULT_X = 1
+DEFAULT_Y = 2
+
+# Creating the decorator function
+def decorator(function=None, *, x=DEFAULT_X, y=DEFAULT_Y): 
+    if function is None:  # called as `@decorator(x=3, y=4)`
+        def decorated(function):
+            @wraps(function)
+            def wrapped(*args, **kwargs):
+                # Pass parameters with default values
+                return function(x, y)
+            return wrapped
+    else:  # called as `@decorator`
+        @wraps(function)
+        def wrapped(*args, **kwargs):
+            # Pass parameters with default values
+            return function(x, y)
+        
+    return wrapped
+
+# Applying the decorator with parameters
+@decorator(x=3, y=4)
+def my_function(x, y):
+    print("result =", x + y)
+    return x + y
+
+my_function()  # 7
+```
+
+1. Handling function=None:
+   This allows the decorator to be applied both with parameters (@decorator(x=3, y=4)) and without (@decorator). When function=None, the decorator must return another function (decorated) that will later accept the actual function and apply the logic.
+
+2. wrapped Function:
+    The wrapped function should accept arbitrary arguments (*args and **kwargs), even though you're only passing x and y here. This ensures that the decorator remains flexible if you need to pass more arguments to the decorated function in the future.
+    The decorator still applies the default values (x=DEFAULT_X, y=DEFAULT_Y) when no arguments are provided by the user.
+
+3. @wraps(function):
+    This is important to preserve the original function's signature and metadata (name, docstring, etc.) after the decorator wraps it.
+
+### Behavior of the Code
+
+    With Parameters (@decorator(x=3, y=4)): When you apply the decorator with parameters, those parameters are passed directly to the decorated function. With Defaults (@decorator): When the decorator is used without parameters, the defaults (DEFAULT_X=1, DEFAULT_Y=2) are used.
+
+#### Final Thoughts
+    - **functools.partial**: In this case, functools.partial is not strictly needed, because you're already handling the parameters inside the decorator function itself. However, partial can be useful if you need to pre-set specific arguments of a function and pass the rest dynamically. 
+Decorator Design: This approach works well because it provides flexibility—allowing the decorator to function both with and without parameters.
+
+
+    
