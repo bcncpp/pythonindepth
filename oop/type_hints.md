@@ -8,8 +8,7 @@ A gradual type system:
 Type checkers that we can use: s pytype,  Pyright, Pyre, Mypy.
 We use Mypy.
 
-```
-#!/usr/bin/env python3
+```python
 def rotate_string(s: str, count: int) -> str:
     tmp = [ x for x in s]
     for i in range(0, len(s)):
@@ -21,12 +20,12 @@ if __name__=="__main__":
 This is the complete typing, let's try to play a bit with it.  Suppose we want to to check the
 typing with mypy.
 ```
-jo@DESKTOP:~/python/mypy$ mypy --disallow-incomplete-defs rotate_0.py 
+$ mypy --disallow-incomplete-defs rotate_0.py 
 Success: no issues found in 1 source file
 ```
 
 Ok let remove the typing hints:
-```
+```python
 #!/usr/bin/env python3 
 def rotate_string(s : str, count):
     tmp = [ x for x in s]
@@ -38,7 +37,7 @@ if __name__=="__main__":
 ```
 
 ```
-jozoppi@DESKTOP-T9826C8:~/python/mypy$ mypy --disallow-incomplete-defs rotate_1.py 
+$ mypy --disallow-incomplete-defs rotate_1.py 
 messages_test_bug.py:3: error: Function is missing a return type annotation
 messages_test_bug.py:3: error: Function is missing a type annotation for one or more arguments
 Found 2 errors in 1 file (checked 1 source file)
@@ -46,9 +45,7 @@ Found 2 errors in 1 file (checked 1 source file)
 ```
 
 Now we want to use the same index count for rotating the merge of two strings where the second might be present or not
-```
-#!/usr/bin/env python3
-
+```python
 from typing import Optional
 def rotate_string(count: int, s: str, s1: Optional[str]=None)->str:
     tmp = [ x for x in s]
@@ -71,7 +68,7 @@ In a gradual type system, we have the interplay of two different views of types:
 - Nominal typing.  Objects and variables have types. But objects only exist at runtime, and the type checker only cares about the source code where variables (including parameters) are annotated with type hints.
 
 Let's clarify with an example.
-```
+```python
 #!/usr/bin/env python3
 class Animal:
   pass
@@ -110,8 +107,8 @@ if __name__=="__main__":
 
 Let's lunch this example:
 
-```
-jozoppi@DESKTOP:~/python/mypy$ ./ducknominaltyping.py 
+```bash
+$  python3 ./ducknominaltyping.py 
 Duck typing test
 Eat!
 Speak!
@@ -126,7 +123,7 @@ Work hard!
 Eat!
 Speak!
 Work!
-jozoppi@DESKTOP:~/python/mypy$ mypy ./ducknominaltyping.py
+$ mypy ./ducknominaltyping.py
 message_test_03.py:24: error: Missing return statement
 message_test_03.py:37: error: Argument 1 to "lifecycle_employee" has incompatible type "Manager"; expected "Employee"
 Found 2 errors in 1 file (checked 1 source file)
@@ -155,7 +152,7 @@ This section covers all the major types you can use with annotations:
 We’ll cover each of these in turn, starting with a type that is strange, apparently useless, but crucially important.
 
 
-Typing Any.
+## Typing Any.
 
 ```
 def mul2(x):
