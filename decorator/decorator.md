@@ -284,3 +284,67 @@ Decorator Design: This approach works well because it provides flexibility—all
 # Decorator per coroutines
 
 [View the Python script](./decorator_coro.py)
+
+### Using Lambda Functions as Inline Decorators in Python
+
+In Python, decorators are commonly used to modify or enhance the behavior of functions. While most decorators are defined using def, it's also possible to define them inline using lambda functions — a powerful but often underused trick.
+
+This article explores how to use a lambda to create a simple logging decorator and explains when this technique is useful (and when it's not).
+```python
+def _log(f, *args, **kwargs):
+    print(f"calling {f.__qualname__!r} with {args=} and {kwargs=}")
+    return f(*args, **kwargs)
+@(lambda f: lambda *args, **kwargs: _log(f, *args, **kwargs))
+def func(x):
+    return x + 1
+func(3)
+```
+### How It Works
+
+- _log() is a helper function that logs a function’s name and arguments, then calls it.
+The decorator is created on the fly using a lambda:
+```python
+    lambda f: lambda *args, **kwargs: _log(f, *args, **kwargs)
+```
+
+This lambda receives the function func, wraps it in another lambda that logs and calls it, and returns that wrapped version.
+### Output
+```bash
+calling 'func' with args=(3,) and kwargs={}
+4
+```
+
+- When to Use Inline Lambda Decorators
+
+1. Quick, local use cases — e.g., debugging or prototyping.
+2. Functional programming contexts — where functions and decorators are passed around dynamically.
+3. One-off behavior — you don’t need to reuse the decorator elsewhere.
+
+- When to Avoid
+
+1. When the decorator logic is complex.
+2. When multiple functions will share the same decorator — prefer a named one.
+3. In production code where readability and maintainability matter.
+
+🧪 Other Use Cases
+Timing a Function
+```python
+import time
+
+@(
+    lambda f: lambda *args, **kwargs: (
+        lambda start=time.time(): (
+            print(f"{f.__name__} took {time.time() - start:.4f}s"),
+            f(*args, **kwargs)
+        )[1]
+    )
+)
+def slow(x):
+    time.sleep(1)
+    return x
+
+slow(5)
+```
+
+## Conclusion
+Using lambda functions as decorators allows for powerful, expressive, and compact code — especially useful in quick scripts or functional-style programming. However, clarity should always come first. For anything beyond basic behavior, use a named decorator for better readability.
